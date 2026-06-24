@@ -14,13 +14,22 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 3000;
 
-// 載入球員資料庫
+// 載入資料庫
 let PLAYERS = [];
+let CELEBRITIES = [];
+
 try {
   PLAYERS = JSON.parse(fs.readFileSync(path.join(__dirname, 'nba_players.json'), 'utf-8'));
   console.log(`成功載入球員資料庫，共 ${PLAYERS.length} 位球員。`);
 } catch (error) {
   console.error("無法讀取 nba_players.json 檔案！", error);
+}
+
+try {
+  CELEBRITIES = JSON.parse(fs.readFileSync(path.join(__dirname, 'celebrities.json'), 'utf-8'));
+  console.log(`成功載入藝人資料庫，共 ${CELEBRITIES.length} 位藝人。`);
+} catch (error) {
+  console.error("無法讀取 celebrities.json 檔案！", error);
 }
 
 // 根網址重導向至手機/房長合一頁面
@@ -37,17 +46,6 @@ app.get('/play', (req, res) => {
 });
 
 // 遊戲房間暫存
-// roomCode -> { 
-//   adminId, 
-//   players: { socketId: { nickname, score, lastAnswerCorrect, lastAnswerPoints, answered } }, 
-//   gamePlayers: [],
-//   totalRounds: 0,
-//   currentIndex: 0,
-//   currentQuestion: { type, choices, correctNameCn, correctNameEn, startTime, duration }, 
-//   status: 'lobby',
-//   gameMode,
-//   selectedTeam
-// }
 const rooms = {};
 
 // 產生隨機四位數字房號
@@ -79,7 +77,7 @@ function isCorrectAnswer(guess, correctNameCn, correctNameEn) {
     return true;
   }
   
-  // 3. 中文名拆分符合（如「詹姆斯」符合「勒布朗·詹姆斯」，長度需大於等於 2）
+  // 3. 中文名拆分符合（如「周杰倫」比對「杰倫」或「周董」，長度需大於等於 2）
   const cnParts = correctNameCn.split('·');
   if (cnParts.some(part => part.length >= 2 && cleanStr(part) === cleanGuess)) {
     return true;
@@ -91,6 +89,22 @@ function isCorrectAnswer(guess, correctNameCn, correctNameEn) {
   }
   
   return false;
+}
+
+// 取得數值對應的標籤名稱
+function getStatLabels(category) {
+  if (category === 'male_celebrity' || category === 'female_celebrity') {
+    return {
+      stat1: "身高 (cm)",
+      stat2: "出道年份",
+      stat3: "主要獎項數"
+    };
+  }
+  return {
+    stat1: "PTS (得分)",
+    stat2: "REB (籃板)",
+    stat3: "AST (助攻)"
+  };
 }
 
 // 發送下一道題目給房間內的所有人
@@ -115,10 +129,18 @@ function sendNextQuestion(roomCode) {
   const qType = (room.currentIndex % 2 === 0) ? 'choice' : 'text';
   const duration = 20;
 
+  // 從對應的資料庫中選取混淆選項
+  let databaseForChoices = PLAYERS;
+  if (room.category === 'male_celebrity') {
+    databaseForChoices = CELEBRITIES.filter(c => c.type === 'male');
+  } else if (room.category === 'female_celebrity') {
+    databaseForChoices = CELEBRITIES.filter(c => c.type === 'female');
+  }
+
   // 產生四選一選項
   let choices = [];
   if (qType === 'choice') {
-    const incorrects = PLAYERS
+    const incorrects = databaseForChoices
       .filter(p => p.name !== player.name)
       .sort(() => 0.5 - Math.random())
       .slice(0, 3);
@@ -150,28 +172,35 @@ function sendNextQuestion(roomCode) {
     room.players[pId].lastAnswerPoints = 0;
   });
 
-  console.log(`房間 ${roomCode} 發送題目 [${room.currentIndex + 1}/${room.totalRounds}]: ${player.en_name} (型態: ${qType})`);
+  console.log(`房間 ${roomCode} 發送題目 [${room.currentIndex + 1}/${room.totalRounds}]: ${player.en_name} (主題: ${room.category})`);
 
-  // 廣播給房間內所有玩家 (不含答案答案名字，但包含頭像 ID 與數據以供手機顯示)
+  const imageUrl = room.category === 'nba' 
+    ? `https://cdn.nba.com/headshots/nba/latest/260x190/${player.id}.png`
+    : player.image_url;
+
+  // 廣播給房間內所有玩家
   io.to(`room-${roomCode}`).emit('new_question', {
     currentIndex: room.currentIndex,
     totalRounds: room.totalRounds,
     type: qType,
     choices,
     duration,
-    playerId: player.id, // 用於載入頭像
+    playerId: player.id,
+    imageUrl: imageUrl,
     pts: player.pts,
     reb: player.reb,
     ast: player.ast,
     team: player.team,
-    gameMode: room.gameMode // 用於決定是否顯示某些提示
+    labels: getStatLabels(room.category),
+    gameMode: room.gameMode,
+    category: room.category
   });
 }
 
 io.on('connection', (socket) => {
   console.log(`Socket 連線成功: ${socket.id}`);
 
-  // 房長建立房間 (在手機端點擊建立)
+  // 房長建立房間
   socket.on('create_room', (data) => {
     const { nickname } = data;
     const roomCode = generateRoomCode();
@@ -185,14 +214,14 @@ io.on('connection', (socket) => {
       currentQuestion: null,
       status: 'lobby',
       gameMode: 1,
-      selectedTeam: ''
+      selectedTeam: '',
+      category: 'nba' // 預設主題
     };
     
     socket.join(`room-${roomCode}`);
     socket.roomCode = roomCode;
     socket.isAdmin = true;
     
-    // 房長同時也是遊戲玩家
     rooms[roomCode].players[socket.id] = {
       nickname: nickname || "房長",
       score: 0,
@@ -201,14 +230,13 @@ io.on('connection', (socket) => {
       answered: false
     };
 
-    console.log(`房間建立成功: ${roomCode} (房長 Admin: ${socket.id}, 暱稱: ${nickname})`);
+    console.log(`房間建立成功: ${roomCode} (房長: ${socket.id})`);
     
     socket.emit('room_created', { 
       roomCode,
       nickname: nickname || "房長"
     });
 
-    // 推送目前玩家列表給自己
     const playerList = Object.values(rooms[roomCode].players).map(p => p.nickname);
     socket.emit('update_players', { players: playerList });
   });
@@ -231,7 +259,6 @@ io.on('connection', (socket) => {
       return socket.emit('join_error', { message: '暱稱已被使用，請換一個名字！' });
     }
     
-    // 加入房間
     socket.join(`room-${roomCode}`);
     socket.roomCode = roomCode;
     socket.isAdmin = false;
@@ -245,38 +272,50 @@ io.on('connection', (socket) => {
     };
     
     console.log(`玩家 ${nickname} 加入了房間 ${roomCode} (${socket.id})`);
-    
     socket.emit('join_success', { roomCode, nickname });
     
-    // 通知房間所有人更新玩家名單
     const playerList = Object.values(rooms[roomCode].players).map(p => p.nickname);
     io.to(`room-${roomCode}`).emit('update_players', { players: playerList });
   });
 
-  // 房長開始遊戲
+  // 房長開始遊戲 (此時帶有主題參數 category)
   socket.on('start_game', (data) => {
     const roomCode = socket.roomCode;
     const room = rooms[roomCode];
     if (!room || room.adminId !== socket.id) return;
     
-    const { gameMode: mode, selectedTeam: team } = data;
+    const { gameMode: mode, selectedTeam: team, category } = data;
     room.gameMode = parseInt(mode);
     room.selectedTeam = team;
+    room.category = category || 'nba';
 
-    // 篩選關卡球員
     let selectedPlayers = [];
-    if (room.gameMode === 1) {
-      selectedPlayers = [...PLAYERS].sort(() => 0.5 - Math.random()).slice(0, 15);
-    } 
-    else if (room.gameMode === 2) {
-      const filtered = PLAYERS.filter(p => p.team.toUpperCase() === team.toUpperCase());
-      if (filtered.length === 0) {
-        return socket.emit('game_error', { message: `找不到該隊球員。` });
+    
+    // 依選定主題加載球員資料
+    if (room.category === 'nba') {
+      if (room.gameMode === 1) {
+        selectedPlayers = [...PLAYERS].sort(() => 0.5 - Math.random()).slice(0, 15);
+      } 
+      else if (room.gameMode === 2) {
+        const filtered = PLAYERS.filter(p => p.team.toUpperCase() === team.toUpperCase());
+        if (filtered.length === 0) {
+          return socket.emit('game_error', { message: `找不到該隊球員。` });
+        }
+        selectedPlayers = filtered.sort(() => 0.5 - Math.random()).slice(0, 15);
+      } 
+      else if (room.gameMode === 3) {
+        selectedPlayers = [...PLAYERS].sort(() => 0.5 - Math.random()).slice(0, 10);
       }
-      selectedPlayers = filtered.sort(() => 0.5 - Math.random()).slice(0, 15);
     } 
-    else if (room.gameMode === 3) {
-      selectedPlayers = [...PLAYERS].sort(() => 0.5 - Math.random()).slice(0, 10);
+    else if (room.category === 'male_celebrity') {
+      // 台灣男藝人：隨機 10 位
+      const filtered = CELEBRITIES.filter(c => c.type === 'male');
+      selectedPlayers = filtered.sort(() => 0.5 - Math.random()).slice(0, 10);
+    } 
+    else if (room.category === 'female_celebrity') {
+      // 台灣女藝人：隨機 10 位
+      const filtered = CELEBRITIES.filter(c => c.type === 'female');
+      selectedPlayers = filtered.sort(() => 0.5 - Math.random()).slice(0, 10);
     }
 
     room.gamePlayers = selectedPlayers;
@@ -286,7 +325,6 @@ io.on('connection', (socket) => {
 
     io.to(`room-${roomCode}`).emit('game_started');
     
-    // 發送第一題
     sendNextQuestion(roomCode);
   });
 
@@ -321,17 +359,14 @@ io.on('connection', (socket) => {
     
     socket.emit('answer_received', { isCorrect, pointsEarned });
     
-    // 統計已回答人數
     const playerIds = Object.keys(room.players);
     const answeredCount = playerIds.filter(id => room.players[id].answered).length;
     
-    // 通知房間內所有人答題進度 (幾個人答了)
     io.to(`room-${roomCode}`).emit('player_submitted_update', {
       answeredCount,
       totalPlayers: playerIds.length
     });
     
-    // 如果全體答完，且時間還沒到，自動揭曉
     if (answeredCount === playerIds.length) {
       revealAnswer(roomCode);
     }
@@ -383,11 +418,9 @@ io.on('connection', (socket) => {
         console.log(`玩家 ${player.nickname} 斷線離開房間 ${roomCode}`);
         delete room.players[socket.id];
         
-        // 廣播最新玩家名單
         const playerList = Object.values(room.players).map(p => p.nickname);
         io.to(`room-${roomCode}`).emit('update_players', { players: playerList });
         
-        // 如果正在答題，檢查是否因有人退出導致答題完畢
         if (room.status === 'playing' && room.currentQuestion) {
           const playerIds = Object.keys(room.players);
           const answeredCount = playerIds.filter(id => room.players[id].answered).length;
@@ -412,7 +445,6 @@ function revealAnswer(roomCode) {
   const qInfo = room.currentQuestion;
   if (!qInfo) return;
 
-  // 整理排行榜與結果
   const playerResults = Object.keys(room.players).map(pId => {
     const p = room.players[pId];
     return {
@@ -426,13 +458,13 @@ function revealAnswer(roomCode) {
 
   const leaderboard = playerResults.sort((a, b) => b.score - a.score);
 
-  // 廣播給所有人 (包含正確解答、排行榜、球員詳細數據與生涯效力)
   io.to(`room-${roomCode}`).emit('answer_revealed', {
     correctNameCn: qInfo.correctNameCn,
     correctNameEn: qInfo.correctNameEn,
-    playerData: qInfo.playerData, // 含 id、pts、reb、ast、team、career_teams
+    playerData: qInfo.playerData,
+    labels: getStatLabels(room.category), // 動態傳送標籤
     leaderboard,
-    playerResults: room.players // 各個玩家細節
+    playerResults: room.players
   });
 }
 

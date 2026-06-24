@@ -654,8 +654,19 @@
           <label for="input-nickname-admin">房長暱稱</label>
           <input type="text" id="input-nickname-admin" class="input-field" placeholder="輸入您的遊戲暱稱" maxlength="10" value="房長">
         </div>
-        
+
+        <!-- 選擇遊戲主題 -->
         <div class="input-group">
+          <label>選擇遊戲主題 (Theme)</label>
+          <div id="theme-btns-container" class="team-grid-mini" style="grid-template-columns: repeat(3, 1fr); margin-top: 5px; margin-bottom: 10px;">
+            <button type="button" class="team-btn-mini selected" data-theme="nba">🏀 NBA球員</button>
+            <button type="button" class="team-btn-mini" data-theme="male_celebrity">🤵 男藝人</button>
+            <button type="button" class="team-btn-mini" data-theme="female_celebrity">💃 女藝人</button>
+          </div>
+        </div>
+        
+        <!-- NBA 專屬關卡選擇，給予 ID 以利顯示/隱藏 -->
+        <div id="nba-mode-group" class="input-group">
           <label>選擇挑戰關卡</label>
           <div class="mode-cards-mini">
             <div class="mode-card-mini selected" data-mode="1">
@@ -819,15 +830,15 @@
 
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center;">
           <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
-            <p style="font-size:0.65rem; color:var(--text-secondary);">PTS</p>
+            <p id="label-stat1" style="font-size:0.65rem; color:var(--text-secondary);">PTS</p>
             <p id="reveal-pts" style="font-weight:800; font-size: 1.05rem;">0.0</p>
           </div>
           <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
-            <p style="font-size:0.65rem; color:var(--text-secondary);">REB</p>
+            <p id="label-stat2" style="font-size:0.65rem; color:var(--text-secondary);">REB</p>
             <p id="reveal-reb" style="font-weight:800; font-size: 1.05rem;">0.0</p>
           </div>
           <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
-            <p style="font-size:0.65rem; color:var(--text-secondary);">AST</p>
+            <p id="label-stat3" style="font-size:0.65rem; color:var(--text-secondary);">AST</p>
             <p id="reveal-ast" style="font-weight:800; font-size: 1.05rem;">0.0</p>
           </div>
         </div>
