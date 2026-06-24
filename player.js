@@ -64,7 +64,7 @@ const playSubmittedOverlay = document.getElementById("play-submitted-overlay");
 const playAnsweredRatio = document.getElementById("play-answered-ratio");
 const adminPlayControls = document.getElementById("admin-play-controls");
 const btnRevealAdmin = document.getElementById("btn-reveal-admin");
-const choiceBtns = document.querySelectorAll(".choice-btn-mobile");
+const choiceBtns = document.querySelectorAll(".choice-btn-mini");
 
 // DOM 元素 - 答案揭曉
 const revealFeedbackIcon = document.getElementById("reveal-feedback-icon");
@@ -404,7 +404,7 @@ socket.on("new_question", (data) => {
     choices.forEach((choice, idx) => {
       const btn = choiceBtns[idx];
       btn.textContent = choice;
-      btn.className = `choice-btn-mobile choice-btn-mini choice-${idx}`; // 重置 class
+      btn.className = `choice-btn-mini choice-${idx}`; // 重置 class
     });
   } else {
     playQtypeBadge.textContent = "名字輸入填空題 ⌨️";
