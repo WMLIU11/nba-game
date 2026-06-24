@@ -136,20 +136,101 @@ function getStatLabels(category) {
   };
 }
 
+// 取得類別顯示名稱
+function getCategoryName(category) {
+  if (category === 'nba') return 'NBA 球員';
+  if (category === 'male_celebrity') return '台灣男藝人';
+  if (category === 'female_celebrity') return '台灣女藝人';
+  return category;
+}
+
+// 依類別取得這一關卡的球員名單
+function getPlayersForCategory(category, gameMode, selectedTeam) {
+  if (category === 'nba') {
+    if (gameMode === 2) {
+      const filtered = PLAYERS.filter(p => p.team.toUpperCase() === (selectedTeam || '').toUpperCase());
+      return filtered.length > 0
+        ? filtered.sort(() => 0.5 - Math.random()).slice(0, 15)
+        : [...PLAYERS].sort(() => 0.5 - Math.random()).slice(0, 15);
+    } else if (gameMode === 3) {
+      return [...PLAYERS].sort(() => 0.5 - Math.random()).slice(0, 10);
+    }
+    return [...PLAYERS].sort(() => 0.5 - Math.random()).slice(0, 15);
+  }
+  if (category === 'male_celebrity') {
+    return CELEBRITIES.filter(c => c.type === 'male').sort(() => 0.5 - Math.random()).slice(0, 10);
+  }
+  if (category === 'female_celebrity') {
+    return CELEBRITIES.filter(c => c.type === 'female').sort(() => 0.5 - Math.random()).slice(0, 10);
+  }
+  return [];
+}
+
+// 啟動對應關卡
+function startNextCategory(roomCode) {
+  const room = rooms[roomCode];
+  if (!room) return;
+
+  const category = room.categories[room.currentCategoryIndex];
+  room.category = category;
+  room.status = 'playing';
+
+  // 記錄本關開始前的積分（用於計算本關得分）
+  Object.keys(room.players).forEach(pId => {
+    room.players[pId].scoreBeforeRound = room.players[pId].score;
+  });
+
+  const selectedPlayers = getPlayersForCategory(category, room.gameMode, room.selectedTeam);
+  room.gamePlayers = selectedPlayers;
+  room.totalRounds = selectedPlayers.length;
+  room.currentIndex = 0;
+
+  console.log(`展開第 ${room.currentCategoryIndex + 1}/${room.categories.length} 關卡：${getCategoryName(category)} (房間 ${roomCode})`);
+
+  // 廣播新關卡開始
+  io.to(`room-${roomCode}`).emit('round_started', {
+    categoryIndex: room.currentCategoryIndex + 1,
+    totalCategories: room.categories.length,
+    category: category,
+    categoryName: getCategoryName(category)
+  });
+
+  sendNextQuestion(roomCode);
+}
+
 // 發送下一道題目給房間內的所有人
 function sendNextQuestion(roomCode) {
   const room = rooms[roomCode];
   if (!room) return;
 
   if (room.currentIndex >= room.totalRounds) {
-    // 遊戲結束
-    const leaderboard = Object.keys(room.players).map(pId => ({
-      nickname: room.players[pId].nickname,
-      score: room.players[pId].score
-    })).sort((a, b) => b.score - a.score);
+    // 本關卡結束，計算累計排名
+    const leaderboard = Object.keys(room.players).map(pId => {
+      const p = room.players[pId];
+      return {
+        nickname: p.nickname,
+        score: p.score,
+        roundScore: p.score - (p.scoreBeforeRound || 0)
+      };
+    }).sort((a, b) => b.score - a.score);
 
-    io.to(`room-${roomCode}`).emit('game_finished', { leaderboard });
-    room.status = 'ended';
+    const isLastRound = room.currentCategoryIndex >= room.categories.length - 1;
+
+    if (isLastRound) {
+      // 全部關卡完成，發送最終結算
+      io.to(`room-${roomCode}`).emit('game_finished', { leaderboard });
+      room.status = 'ended';
+    } else {
+      // 還有下一關，發送關卡結束暫時排名
+      room.status = 'round_end';
+      io.to(`room-${roomCode}`).emit('round_finished', {
+        categoryIndex: room.currentCategoryIndex + 1,
+        totalCategories: room.categories.length,
+        categoryName: getCategoryName(room.category),
+        leaderboard,
+        isLastRound: false
+      });
+    }
     return;
   }
 
@@ -308,54 +389,33 @@ io.on('connection', (socket) => {
     io.to(`room-${roomCode}`).emit('update_players', { players: playerList });
   });
 
-  // 房長開始遊戲 (此時帶有主題參數 category)
+  // 房長開始遊戲 (此時帶有多關卡參數 categories)
   socket.on('start_game', (data) => {
     const roomCode = socket.roomCode;
     const room = rooms[roomCode];
     if (!room || room.adminId !== socket.id) return;
     
-    const { gameMode: mode, selectedTeam: team, category } = data;
-    room.gameMode = parseInt(mode);
-    room.selectedTeam = team;
-    room.category = category || 'nba';
+    const { gameMode: mode, selectedTeam: team, categories } = data;
+    room.gameMode = parseInt(mode) || 1;
+    room.selectedTeam = team || '';
+    room.categories = (Array.isArray(categories) && categories.length > 0) ? categories : ['nba'];
+    room.currentCategoryIndex = 0;
 
-    let selectedPlayers = [];
-    
-    // 依選定主題加載球員資料
-    if (room.category === 'nba') {
-      if (room.gameMode === 1) {
-        selectedPlayers = [...PLAYERS].sort(() => 0.5 - Math.random()).slice(0, 15);
-      } 
-      else if (room.gameMode === 2) {
-        const filtered = PLAYERS.filter(p => p.team.toUpperCase() === team.toUpperCase());
-        if (filtered.length === 0) {
-          return socket.emit('game_error', { message: `找不到該隊球員。` });
-        }
-        selectedPlayers = filtered.sort(() => 0.5 - Math.random()).slice(0, 15);
-      } 
-      else if (room.gameMode === 3) {
-        selectedPlayers = [...PLAYERS].sort(() => 0.5 - Math.random()).slice(0, 10);
-      }
-    } 
-    else if (room.category === 'male_celebrity') {
-      // 台灣男藝人：隨機 10 位
-      const filtered = CELEBRITIES.filter(c => c.type === 'male');
-      selectedPlayers = filtered.sort(() => 0.5 - Math.random()).slice(0, 10);
-    } 
-    else if (room.category === 'female_celebrity') {
-      // 台灣女藝人：隨機 10 位
-      const filtered = CELEBRITIES.filter(c => c.type === 'female');
-      selectedPlayers = filtered.sort(() => 0.5 - Math.random()).slice(0, 10);
-    }
+    // 初始化所有玩家積分（重置）
+    Object.keys(room.players).forEach(pId => {
+      room.players[pId].score = 0;
+      room.players[pId].scoreBeforeRound = 0;
+      room.players[pId].lastAnswerCorrect = false;
+      room.players[pId].lastAnswerPoints = 0;
+      room.players[pId].answered = false;
+    });
 
-    room.gamePlayers = selectedPlayers;
-    room.totalRounds = selectedPlayers.length;
-    room.currentIndex = 0;
-    room.status = 'playing';
+    io.to(`room-${roomCode}`).emit('game_started', {
+      categories: room.categories,
+      categoryNames: room.categories.map(getCategoryName)
+    });
 
-    io.to(`room-${roomCode}`).emit('game_started');
-    
-    sendNextQuestion(roomCode);
+    startNextCategory(roomCode);
   });
 
   // 玩家提交答案
@@ -419,6 +479,17 @@ io.on('connection', (socket) => {
     
     room.currentIndex++;
     sendNextQuestion(roomCode);
+  });
+
+  // 房長開始下一關卡
+  socket.on('next_round', () => {
+    const roomCode = socket.roomCode;
+    const room = rooms[roomCode];
+    if (!room || room.adminId !== socket.id) return;
+    if (room.status !== 'round_end') return;
+
+    room.currentCategoryIndex++;
+    startNextCategory(roomCode);
   });
 
   // 房長結束遊戲返回大廳

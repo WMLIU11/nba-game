@@ -17,6 +17,7 @@ const screenEntry = document.getElementById("screen-entry");
 const screenWait = document.getElementById("screen-wait");
 const screenPlay = document.getElementById("screen-play");
 const screenReveal = document.getElementById("screen-reveal");
+const screenRoundEnd = document.getElementById("screen-round-end");
 const screenEnd = document.getElementById("screen-end");
 
 // DOM 元素 - 入口引導
@@ -35,8 +36,17 @@ const entryError = document.getElementById("entry-error");
 const modeCards = document.querySelectorAll(".mode-card-mini");
 const teamSelectorMini = document.getElementById("team-selector-mini");
 const teamBtns = document.querySelectorAll("#team-selector-mini .team-btn-mini");
-const themeBtns = document.querySelectorAll("#theme-btns-container .team-btn-mini");
 const nbaModeGroup = document.getElementById("nba-mode-group");
+const catNba = document.getElementById("cat-nba");
+
+// DOM 元素 - 關卡結束暫時排行
+const btnNextRound = document.getElementById("btn-next-round");
+const roundEndTitle = document.getElementById("round-end-title");
+const roundEndSubtitle = document.getElementById("round-end-subtitle");
+const roundProgressDots = document.getElementById("round-progress-dots");
+const roundEndLeaderboard = document.getElementById("round-end-leaderboard");
+const adminRoundEndControls = document.getElementById("admin-round-end-controls");
+const playerRoundEndWait = document.getElementById("player-round-end-wait");
 
 // DOM 元素 - 大廳等待
 const waitRoomCode = document.getElementById("wait-room-code");
@@ -91,10 +101,10 @@ const btnRestartPlayer = document.getElementById("btn-restart-player");
 
 // === 初始化與 Tab 切換 ===
 function showScreen(targetScreen) {
-  [screenEntry, screenWait, screenPlay, screenReveal, screenEnd].forEach(s => {
-    s.classList.add("hidden");
+  [screenEntry, screenWait, screenPlay, screenReveal, screenRoundEnd, screenEnd].forEach(s => {
+    if (s) s.classList.add("hidden");
   });
-  targetScreen.classList.remove("hidden");
+  if (targetScreen) targetScreen.classList.remove("hidden");
 }
 
 function switchTab(role) {
@@ -149,13 +159,10 @@ teamBtns.forEach(btn => {
   });
 });
 
-themeBtns.forEach(btn => {
-  btn.addEventListener("click", () => {
-    themeBtns.forEach(b => b.classList.remove("selected"));
-    btn.classList.add("selected");
-    currentCategory = btn.dataset.theme;
-    
-    if (currentCategory === "nba") {
+// 勾選框變更事件：切換 NBA 設定顯示
+if (catNba) {
+  catNba.addEventListener("change", () => {
+    if (catNba.checked) {
       nbaModeGroup.classList.remove("hidden");
       if (gameMode === 2) {
         teamSelectorMini.classList.remove("hidden");
@@ -165,7 +172,7 @@ themeBtns.forEach(btn => {
       teamSelectorMini.classList.add("hidden");
     }
   });
-});
+}
 
 // 頭像載入出錯處理
 playerImg.onerror = () => {
@@ -299,7 +306,21 @@ socket.on("update_players", (data) => {
 
 // === 房長開始遊戲 ===
 btnStartGameAdmin.addEventListener("click", () => {
-  socket.emit("start_game", { gameMode, selectedTeam, category: currentCategory });
+  const selectedCategories = [];
+  if (document.getElementById("cat-nba").checked) selectedCategories.push("nba");
+  if (document.getElementById("cat-male").checked) selectedCategories.push("male_celebrity");
+  if (document.getElementById("cat-female").checked) selectedCategories.push("female_celebrity");
+
+  if (selectedCategories.length === 0) {
+    alert("請至少選擇一個關卡！");
+    return;
+  }
+
+  socket.emit("start_game", {
+    gameMode,
+    selectedTeam,
+    categories: selectedCategories
+  });
 });
 
 socket.on("game_started", () => {
@@ -661,6 +682,74 @@ btnRestartAdmin.addEventListener("click", () => {
 btnRestartPlayer.addEventListener("click", () => {
   window.location.reload();
 });
+
+// === 關卡結束與切換 Socket 監聽 ===
+socket.on("round_finished", (data) => {
+  const { categoryIndex, totalCategories, categoryName, leaderboard } = data;
+
+  // 1. 設定標題與副標題
+  if (roundEndTitle) roundEndTitle.textContent = `🎉 ${categoryName} 關卡結束！`;
+  if (roundEndSubtitle) roundEndSubtitle.textContent = `已完成 ${categoryIndex} / ${totalCategories} 關卡`;
+
+  // 2. 繪製關卡進度小圓點
+  if (roundProgressDots) {
+    roundProgressDots.innerHTML = "";
+    for (let i = 1; i <= totalCategories; i++) {
+      const dot = document.createElement("div");
+      dot.className = "round-dot";
+      if (i < categoryIndex) {
+        dot.classList.add("done");
+      } else if (i === categoryIndex) {
+        dot.classList.add("current");
+      }
+      roundProgressDots.appendChild(dot);
+    }
+  }
+
+  // 3. 渲染暫時排行榜
+  if (roundEndLeaderboard) {
+    roundEndLeaderboard.innerHTML = "";
+    leaderboard.forEach((p, idx) => {
+      const item = document.createElement("div");
+      item.className = "leaderboard-item-mini animate-pop";
+      const rankClass = idx === 0 ? "rb-1" : (idx === 1 ? "rb-2" : (idx === 2 ? "rb-3" : "rb-other"));
+      
+      item.innerHTML = `
+        <div>
+          <span class="rank-badge-mini ${rankClass}">${idx + 1}</span>
+          <span style="font-weight: 700; color:#fff;">${p.nickname}</span>
+        </div>
+        <div style="text-align: right;">
+          <span style="font-size: 0.75rem; color: var(--text-secondary); margin-right: 8px;">本關: +${p.roundScore || 0}</span>
+          <span style="color: var(--accent-color); font-weight: 800;">${p.score} 分</span>
+        </div>
+      `;
+      roundEndLeaderboard.appendChild(item);
+    });
+  }
+
+  // 4. 房長與玩家控制鍵切換
+  if (isAdmin) {
+    if (adminRoundEndControls) adminRoundEndControls.classList.remove("hidden");
+    if (playerRoundEndWait) playerRoundEndWait.classList.add("hidden");
+  } else {
+    if (adminRoundEndControls) adminRoundEndControls.classList.add("hidden");
+    if (playerRoundEndWait) playerRoundEndWait.classList.remove("hidden");
+  }
+
+  showScreen(screenRoundEnd);
+});
+
+socket.on("round_started", (data) => {
+  currentCategory = data.category;
+  console.log(`關卡開始: ${data.categoryName} (${data.categoryIndex}/${data.totalCategories})`);
+});
+
+if (btnNextRound) {
+  btnNextRound.addEventListener("click", () => {
+    socket.emit("next_round");
+  });
+}
 
 // 監聽房間關閉 (例如房長退出)
 socket.on("room_closed", (data) => {

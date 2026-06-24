@@ -615,6 +615,63 @@
       to { transform: scale(1); opacity: 1; }
     }
 
+    /* 關卡結束畫面 */
+    .round-end-banner {
+      background: linear-gradient(135deg, rgba(249,115,22,0.15), rgba(239,68,68,0.08));
+      border: 1px solid rgba(249,115,22,0.3);
+      border-radius: 16px;
+      padding: 16px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .round-end-title {
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: var(--accent-color);
+      margin-bottom: 4px;
+    }
+    .round-end-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+    .round-progress-dots {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin: 12px 0;
+    }
+    .round-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+    }
+    .round-dot.done { background: var(--accent-color); }
+    .round-dot.current { background: #fff; box-shadow: 0 0 8px rgba(255,255,255,0.5); }
+
+    /* 類別勾選框 */
+    .category-checkboxes {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .category-check-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .category-check-item:hover { border-color: rgba(249,115,22,0.4); background: rgba(249,115,22,0.06); }
+    .category-check-item input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--accent-color); cursor: pointer; }
+    .category-check-item label { font-weight: 700; font-size: 0.9rem; cursor: pointer; flex: 1; }
+    .category-check-item .cat-note { font-size: 0.72rem; color: var(--text-secondary); }
+
     .hidden { display: none !important; }
   </style>
 </head>
@@ -655,13 +712,31 @@
           <input type="text" id="input-nickname-admin" class="input-field" placeholder="輸入您的遊戲暱稱" maxlength="10" value="房長">
         </div>
 
-        <!-- 選擇遊戲主題 -->
+        <!-- 選擇遊戲關卡 (多選) -->
         <div class="input-group">
-          <label>選擇遊戲主題 (Theme)</label>
-          <div id="theme-btns-container" class="team-grid-mini" style="grid-template-columns: repeat(3, 1fr); margin-top: 5px; margin-bottom: 10px;">
-            <button type="button" class="team-btn-mini selected" data-theme="nba">🏀 NBA球員</button>
-            <button type="button" class="team-btn-mini" data-theme="male_celebrity">🤵 男藝人</button>
-            <button type="button" class="team-btn-mini" data-theme="female_celebrity">💃 女藝人</button>
+          <label>選擇要玩的關卡（可多選，按順序進行）</label>
+          <div class="category-checkboxes" id="category-checkboxes">
+            <label class="category-check-item">
+              <input type="checkbox" id="cat-nba" value="nba" checked>
+              <span>
+                <div>🏀 NBA 球員</div>
+                <div class="cat-note">隨機抽 15 位球員</div>
+              </span>
+            </label>
+            <label class="category-check-item">
+              <input type="checkbox" id="cat-male" value="male_celebrity">
+              <span>
+                <div>🤵 台灣男藝人</div>
+                <div class="cat-note">從 50 位中隨機抽 10 位</div>
+              </span>
+            </label>
+            <label class="category-check-item">
+              <input type="checkbox" id="cat-female" value="female_celebrity">
+              <span>
+                <div>💃 台灣女藝人</div>
+                <div class="cat-note">從 50 位中隨機抽 10 位</div>
+              </span>
+            </label>
           </div>
         </div>
         
@@ -812,7 +887,31 @@
       </div>
     </div>
 
-    <!-- 4. 單題答案揭曉與即時排行榜 (雙角色通用) -->
+    <!-- 4. 【新增】關卡結束暫時排名畫面 -->
+    <div id="screen-round-end" class="player-card-mobile hidden">
+      <div class="round-end-banner">
+        <div class="round-end-title" id="round-end-title">🎉 第一關卡結束！</div>
+        <div class="round-end-subtitle" id="round-end-subtitle">已完成 1 / 3 關卡</div>
+        <div class="round-progress-dots" id="round-progress-dots"></div>
+      </div>
+
+      <div class="round-leaderboard-mobile">
+        <h4 style="color: #eab308;">📊 目前累計排名</h4>
+        <div id="round-end-leaderboard" class="leaderboard-list-mini"></div>
+      </div>
+
+      <!-- 房長專用：開始下一關卡 -->
+      <div id="admin-round-end-controls" class="admin-float-bar hidden">
+        <button id="btn-next-round" class="btn btn-primary" style="flex: 1; font-size: 1rem;">開始下一關卡 ➔</button>
+      </div>
+
+      <!-- 普通玩家等待 -->
+      <div id="player-round-end-wait" style="text-align:center; margin-top:20px; color:var(--text-secondary); font-weight:700; font-size:0.9rem;">
+        等待房長開始下一關卡... ⏳
+      </div>
+    </div>
+
+    <!-- 5. 單題答案揭曉與即時排行榜 (雙角色通用) -->
     <div id="screen-reveal" class="player-card-mobile hidden">
       <div id="reveal-feedback-icon" style="font-size: 3rem; margin-bottom: 5px;">🎉</div>
       <div id="reveal-feedback-text" class="fb-tag fb-correct">答對了！</div>
