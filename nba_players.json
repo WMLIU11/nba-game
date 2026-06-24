@@ -1,0 +1,502 @@
+[
+  {
+    "id": 2544,
+    "name": "勒布朗·詹姆斯",
+    "en_name": "LeBron James",
+    "team": "MIA",
+    "pts": 26.5,
+    "reb": 7.2,
+    "ast": 6.9,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/2544.png"
+  },
+  {
+    "id": 977,
+    "name": "科比·布萊恩特",
+    "en_name": "Kobe Bryant",
+    "team": "LAL",
+    "pts": 25.0,
+    "reb": 5.0,
+    "ast": 4.5,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/977.png"
+  },
+  {
+    "id": 201939,
+    "name": "斯蒂芬·庫里",
+    "en_name": "Stephen Curry",
+    "team": "GSW",
+    "pts": 22.4,
+    "reb": 4.3,
+    "ast": 6.9,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/201939.png"
+  },
+  {
+    "id": 201142,
+    "name": "凱文·杜蘭特",
+    "en_name": "Kevin Durant",
+    "team": "OKC",
+    "pts": 28.5,
+    "reb": 7.4,
+    "ast": 3.9,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/201142.png"
+  },
+  {
+    "id": 2548,
+    "name": "德維恩·韋德",
+    "en_name": "Dwyane Wade",
+    "team": "MIA",
+    "pts": 21.0,
+    "reb": 4.8,
+    "ast": 4.7,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/2548.png"
+  },
+  {
+    "id": 2546,
+    "name": "卡梅隆·安東尼",
+    "en_name": "Carmelo Anthony",
+    "team": "NYK",
+    "pts": 25.2,
+    "reb": 6.8,
+    "ast": 3.1,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/2546.png"
+  },
+  {
+    "id": 101108,
+    "name": "克里斯·保羅",
+    "en_name": "Chris Paul",
+    "team": "LAC",
+    "pts": 18.0,
+    "reb": 4.0,
+    "ast": 9.8,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/101108.png"
+  },
+  {
+    "id": 201935,
+    "name": "詹姆斯·哈登",
+    "en_name": "James Harden",
+    "team": "HOU",
+    "pts": 24.0,
+    "reb": 5.0,
+    "ast": 6.0,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/201935.png"
+  },
+  {
+    "id": 201566,
+    "name": "拉塞爾·威斯布魯克",
+    "en_name": "Russell Westbrook",
+    "team": "OKC",
+    "pts": 23.0,
+    "reb": 6.0,
+    "ast": 8.0,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/201566.png"
+  },
+  {
+    "id": 2730,
+    "name": "德懷特·霍華德",
+    "en_name": "Dwight Howard",
+    "team": "ORL",
+    "pts": 17.5,
+    "reb": 12.5,
+    "ast": 1.5,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/2730.png"
+  },
+  {
+    "id": 1717,
+    "name": "德克·諾維茨基",
+    "en_name": "Dirk Nowitzki",
+    "team": "DAL",
+    "pts": 19.5,
+    "reb": 6.2,
+    "ast": 2.2,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/1717.png"
+  },
+  {
+    "id": 1495,
+    "name": "蒂姆·鄧肯",
+    "en_name": "Tim Duncan",
+    "team": "SAS",
+    "pts": 14.2,
+    "reb": 9.0,
+    "ast": 2.8,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/1495.png"
+  },
+  {
+    "id": 201567,
+    "name": "凱文·樂福",
+    "en_name": "Kevin Love",
+    "team": "MIN",
+    "pts": 20.0,
+    "reb": 12.0,
+    "ast": 2.5,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/201567.png"
+  },
+  {
+    "id": 201933,
+    "name": "布雷克·格里芬",
+    "en_name": "Blake Griffin",
+    "team": "LAC",
+    "pts": 21.5,
+    "reb": 9.5,
+    "ast": 4.0,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/201933.png"
+  },
+  {
+    "id": 202331,
+    "name": "保羅·喬治",
+    "en_name": "Paul George",
+    "team": "IND",
+    "pts": 18.1,
+    "reb": 6.3,
+    "ast": 3.2,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/202331.png"
+  },
+  {
+    "id": 202695,
+    "name": "科懷·倫納德",
+    "en_name": "Kawhi Leonard",
+    "team": "SAS",
+    "pts": 14.3,
+    "reb": 6.3,
+    "ast": 2.0,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/202695.png"
+  },
+  {
+    "id": 202681,
+    "name": "凱里·歐文",
+    "en_name": "Kyrie Irving",
+    "team": "CLE",
+    "pts": 21.0,
+    "reb": 3.4,
+    "ast": 5.5,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/202681.png"
+  },
+  {
+    "id": 203076,
+    "name": "安東尼·戴維斯",
+    "en_name": "Anthony Davis",
+    "team": "NOP",
+    "pts": 21.0,
+    "reb": 10.0,
+    "ast": 1.5,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/203076.png"
+  },
+  {
+    "id": 201565,
+    "name": "德里克·羅斯",
+    "en_name": "Derrick Rose",
+    "team": "CHI",
+    "pts": 20.0,
+    "reb": 3.5,
+    "ast": 6.0,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/201565.png"
+  },
+  {
+    "id": 2225,
+    "name": "托尼·帕克",
+    "en_name": "Tony Parker",
+    "team": "SAS",
+    "pts": 16.5,
+    "reb": 2.5,
+    "ast": 6.0,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/2225.png"
+  },
+  {
+    "id": 1938,
+    "name": "馬努·吉諾比利",
+    "en_name": "Manu Ginobili",
+    "team": "SAS",
+    "pts": 13.0,
+    "reb": 3.0,
+    "ast": 4.3,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/1938.png"
+  },
+  {
+    "id": 2547,
+    "name": "克里斯·波什",
+    "en_name": "Chris Bosh",
+    "team": "MIA",
+    "pts": 17.5,
+    "reb": 7.0,
+    "ast": 1.8,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/2547.png"
+  },
+  {
+    "id": 2200,
+    "name": "保羅·加索爾",
+    "en_name": "Pau Gasol",
+    "team": "LAL",
+    "pts": 16.8,
+    "reb": 10.0,
+    "ast": 3.5,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/2200.png"
+  },
+  {
+    "id": 201188,
+    "name": "馬克·加索爾",
+    "en_name": "Marc Gasol",
+    "team": "MEM",
+    "pts": 15.0,
+    "reb": 8.0,
+    "ast": 3.5,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/201188.png"
+  },
+  {
+    "id": 200746,
+    "name": "拉馬庫斯·阿爾德里奇",
+    "en_name": "LaMarcus Aldridge",
+    "team": "POR",
+    "pts": 22.0,
+    "reb": 9.0,
+    "ast": 2.0,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/200746.png"
+  },
+  {
+    "id": 203081,
+    "name": "達米安·利拉德",
+    "en_name": "Damian Lillard",
+    "team": "POR",
+    "pts": 21.4,
+    "reb": 3.8,
+    "ast": 6.3,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/203081.png"
+  },
+  {
+    "id": 202322,
+    "name": "約翰·牆",
+    "en_name": "John Wall",
+    "team": "WAS",
+    "pts": 18.0,
+    "reb": 4.5,
+    "ast": 9.0,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/202322.png"
+  },
+  {
+    "id": 202326,
+    "name": "德馬庫斯·考辛斯",
+    "en_name": "DeMarcus Cousins",
+    "team": "SAC",
+    "pts": 21.0,
+    "reb": 11.0,
+    "ast": 3.0,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/202326.png"
+  },
+  {
+    "id": 200765,
+    "name": "拉簡·朗多",
+    "en_name": "Rajon Rondo",
+    "team": "BOS",
+    "pts": 11.0,
+    "reb": 4.8,
+    "ast": 9.8,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/200765.png"
+  },
+  {
+    "id": 1718,
+    "name": "保羅·皮爾斯",
+    "en_name": "Paul Pierce",
+    "team": "BOS",
+    "pts": 16.0,
+    "reb": 4.5,
+    "ast": 3.2,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/1718.png"
+  },
+  {
+    "id": 708,
+    "name": "凱文·加內特",
+    "en_name": "Kevin Garnett",
+    "team": "BOS",
+    "pts": 11.5,
+    "reb": 7.5,
+    "ast": 2.4,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/708.png"
+  },
+  {
+    "id": 951,
+    "name": "雷·阿倫",
+    "en_name": "Ray Allen",
+    "team": "MIA",
+    "pts": 12.0,
+    "reb": 2.8,
+    "ast": 2.0,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/951.png"
+  },
+  {
+    "id": 959,
+    "name": "史蒂夫·納什",
+    "en_name": "Steve Nash",
+    "team": "PHX",
+    "pts": 11.5,
+    "reb": 2.5,
+    "ast": 8.5,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/959.png"
+  },
+  {
+    "id": 467,
+    "name": "傑森·基德",
+    "en_name": "Jason Kidd",
+    "team": "DAL",
+    "pts": 7.5,
+    "reb": 4.5,
+    "ast": 6.5,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/467.png"
+  },
+  {
+    "id": 2405,
+    "name": "阿瑪雷·斯塔德邁爾",
+    "en_name": "Amar'e Stoudemire",
+    "team": "NYK",
+    "pts": 15.0,
+    "reb": 6.5,
+    "ast": 1.2,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/2405.png"
+  },
+  {
+    "id": 101114,
+    "name": "德隆·威廉姆斯",
+    "en_name": "Deron Williams",
+    "team": "BKN",
+    "pts": 16.0,
+    "reb": 3.0,
+    "ast": 7.5,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/101114.png"
+  },
+  {
+    "id": 2207,
+    "name": "喬·約翰遜",
+    "en_name": "Joe Johnson",
+    "team": "BKN",
+    "pts": 16.5,
+    "reb": 3.5,
+    "ast": 3.8,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/2207.png"
+  },
+  {
+    "id": 2216,
+    "name": "扎克·蘭多夫",
+    "en_name": "Zach Randolph",
+    "team": "MEM",
+    "pts": 16.8,
+    "reb": 10.2,
+    "ast": 1.8,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/2216.png"
+  },
+  {
+    "id": 200768,
+    "name": "凱爾·洛瑞",
+    "en_name": "Kyle Lowry",
+    "team": "TOR",
+    "pts": 16.0,
+    "reb": 4.5,
+    "ast": 6.5,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/200768.png"
+  },
+  {
+    "id": 201942,
+    "name": "德馬爾·德羅贊",
+    "en_name": "DeMar DeRozan",
+    "team": "TOR",
+    "pts": 18.5,
+    "reb": 4.0,
+    "ast": 2.8,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/201942.png"
+  },
+  {
+    "id": 201143,
+    "name": "阿爾·霍福德",
+    "en_name": "Al Horford",
+    "team": "ATL",
+    "pts": 15.8,
+    "reb": 8.5,
+    "ast": 3.0,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/201143.png"
+  },
+  {
+    "id": 201149,
+    "name": "喬金·諾阿",
+    "en_name": "Joakim Noah",
+    "team": "CHI",
+    "pts": 10.5,
+    "reb": 10.0,
+    "ast": 4.0,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/201149.png"
+  },
+  {
+    "id": 2738,
+    "name": "安德烈·伊格達拉",
+    "en_name": "Andre Iguodala",
+    "team": "GSW",
+    "pts": 10.5,
+    "reb": 4.2,
+    "ast": 4.5,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/2738.png"
+  },
+  {
+    "id": 202691,
+    "name": "克萊·湯普森",
+    "en_name": "Klay Thompson",
+    "team": "GSW",
+    "pts": 19.5,
+    "reb": 3.5,
+    "ast": 2.3,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/202691.png"
+  },
+  {
+    "id": 203110,
+    "name": "德雷蒙德·格林",
+    "en_name": "Draymond Green",
+    "team": "GSW",
+    "pts": 10.0,
+    "reb": 7.5,
+    "ast": 5.5,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/203110.png"
+  },
+  {
+    "id": 201586,
+    "name": "賽爾吉·伊巴卡",
+    "en_name": "Serge Ibaka",
+    "team": "OKC",
+    "pts": 12.0,
+    "reb": 7.5,
+    "ast": 0.8,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/201586.png"
+  },
+  {
+    "id": 202710,
+    "name": "吉米·巴特勒",
+    "en_name": "Jimmy Butler",
+    "team": "CHI",
+    "pts": 16.0,
+    "reb": 5.0,
+    "ast": 3.5,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/202710.png"
+  },
+  {
+    "id": 200794,
+    "name": "保羅·米爾薩普",
+    "en_name": "Paul Millsap",
+    "team": "ATL",
+    "pts": 16.5,
+    "reb": 8.0,
+    "ast": 3.0,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/200794.png"
+  },
+  {
+    "id": 2736,
+    "name": "羅爾·鄧",
+    "en_name": "Luol Deng",
+    "team": "CHI",
+    "pts": 15.5,
+    "reb": 6.0,
+    "ast": 2.5,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/2736.png"
+  },
+  {
+    "id": 2199,
+    "name": "泰森·錢德勒",
+    "en_name": "Tyson Chandler",
+    "team": "NYK",
+    "pts": 9.5,
+    "reb": 10.0,
+    "ast": 0.8,
+    "image_url": "https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/2199.png"
+  }
+]

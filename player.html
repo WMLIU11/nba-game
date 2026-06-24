@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>NBA 多人猜頭像搶答遊戲</title>
+  <!-- Google Fonts Outfit and Noto Sans TC -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #030712;
+      --bg-gradient: radial-gradient(circle at top, #111827 0%, #030712 100%);
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --accent-color: #f97316;
+      --accent-glow: rgba(249, 115, 22, 0.3);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --success-color: #10b981;
+      --font-title: 'Outfit', 'Noto Sans TC', sans-serif;
+      --font-body: 'Noto Sans TC', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 10px;
+      overflow-x: hidden;
+    }
+
+    .player-container {
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    /* 卡片設計 */
+    .player-card-mobile {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 25px 20px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      position: relative;
+    }
+
+    /* 標題與副標 */
+    h1 {
+      font-family: var(--font-title);
+      font-weight: 900;
+      font-size: 1.8rem;
+      background: linear-gradient(135deg, #fff 30%, var(--accent-color) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    h2 {
+      font-family: var(--font-title);
+      font-weight: 800;
+      font-size: 1.4rem;
+      color: #fff;
+      margin-bottom: 15px;
+    }
+
+    h3 {
+      font-family: var(--font-title);
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: var(--text-primary);
+      margin-bottom: 10px;
+    }
+
+    p.subtitle {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    /* 入口按鈕分支 */
+    .entry-buttons {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .entry-tab-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.03);
+      color: var(--text-secondary);
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .entry-tab-btn.active {
+      background: var(--accent-color);
+      border-color: var(--accent-color);
+      color: #fff;
+      box-shadow: 0 4px 15px var(--accent-glow);
+    }
+
+    /* 表單設計 */
+    .input-group {
+      margin-bottom: 16px;
+      text-align: left;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.8);
+      letter-spacing: 0.5px;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      background: rgba(15, 23, 42, 0.6);
+      color: #fff;
+      font-size: 1rem;
+      box-sizing: border-box;
+      transition: all 0.3s ease;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: var(--accent-color);
+      box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
+    }
+
+    /* 遊戲關卡模式選擇卡片 (房長用) */
+    .mode-cards-mini {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 15px;
+      text-align: left;
+    }
+
+    .mode-card-mini {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .mode-card-mini.selected {
+      background: rgba(249, 115, 22, 0.1);
+      border-color: var(--accent-color);
+      box-shadow: 0 0 12px rgba(249, 115, 22, 0.2);
+    }
+
+    .mode-card-mini h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 2px;
+    }
+
+    .mode-card-mini p {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      line-height: 1.3;
+    }
+
+    /* 房長球隊選擇小格子 */
+    .team-grid-mini {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .team-btn-mini {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 6px;
+      padding: 6px 2px;
+      font-size: 0.75rem;
+      color: #fff;
+      cursor: pointer;
+      font-weight: 700;
+      transition: all 0.2s ease;
+    }
+
+    .team-btn-mini.selected {
+      background: var(--accent-color);
+      border-color: var(--accent-color);
+      box-shadow: 0 2px 8px var(--accent-glow);
+    }
+
+    /* 按鈕設計 */
+    .btn {
+      background: #fff;
+      color: #030712;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 24px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-color) 0%, #ea580c 100%);
+      color: #fff;
+      box-shadow: 0 4px 15px var(--accent-glow);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-primary);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    /* 連線等待畫面 QR Code 等 */
+    .qrcode-box-mini {
+      background: white;
+      padding: 8px;
+      border-radius: 12px;
+      display: inline-block;
+      margin: 15px 0;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+    
+    .qrcode-box-mini img {
+      display: block;
+    }
+
+    .joined-players-list {
+      background: rgba(0,0,0,0.2);
+      border-radius: 16px;
+      padding: 15px;
+      margin-bottom: 20px;
+      max-height: 150px;
+      overflow-y: auto;
+      text-align: left;
+    }
+
+    .player-pill {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      display: inline-block;
+      margin: 4px;
+      animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    /* 遊戲進行畫面 */
+    .game-header-mini {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding-bottom: 10px;
+      margin-bottom: 15px;
+    }
+
+    .progress-bar-container {
+      height: 5px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 15px;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 100%;
+      background: var(--accent-color);
+      transition: width 0.1s linear;
+    }
+
+    /* 核心球員卡片 */
+    .image-wrapper-mini {
+      position: relative;
+      width: 180px;
+      height: 132px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 16px;
+      overflow: hidden;
+      margin: 0 auto 15px auto;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+
+    .player-img-mini {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: filter 0.3s ease;
+    }
+
+    /* 倒數計時數字 */
+    .timer-circle-mini {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: rgba(15, 23, 42, 0.85);
+      border: 2px solid var(--accent-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-title);
+      font-size: 1.05rem;
+      font-weight: 900;
+      color: #fff;
+      box-shadow: 0 0 10px rgba(245,158,11,0.2);
+      z-index: 5;
+    }
+
+    .timer-circle-mini.low-time {
+      border-color: #ef4444;
+      color: #ef4444;
+      animation: pulse 1s infinite;
+    }
+
+    .qtype-tag-mini {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    /* 答題選項按鈕 */
+    .choices-grid-mini {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .choice-btn-mini {
+      padding: 14px 12px;
+      border-radius: 12px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+      min-height: 50px;
+    }
+
+    .choice-btn-mini.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .choice-btn-mini.selected {
+      transform: scale(0.98);
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+      outline: 3px solid #fff;
+      opacity: 1;
+    }
+
+    .choice-0 { background: linear-gradient(135deg, #ef4444, #b91c1c); border-bottom: 3px solid #7f1d1d; }
+    .choice-1 { background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-bottom: 3px solid #1e3a8a; }
+    .choice-2 { background: linear-gradient(135deg, #eab308, #a16207); border-bottom: 3px solid #713f12; }
+    .choice-3 { background: linear-gradient(135deg, #10b981, #047857); border-bottom: 3px solid #064e3b; }
+
+    /* 文字輸入搶答 */
+    .text-guess-container {
+      margin-top: 15px;
+      background: rgba(15, 23, 42, 0.3);
+      padding: 15px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    /* 揭曉畫面詳細資訊 */
+    .reveal-details-box {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 18px;
+      padding: 15px;
+      margin-top: 12px;
+      text-align: left;
+    }
+
+    .reveal-names {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .reveal-name-cn {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .reveal-name-en {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      font-family: var(--font-title);
+    }
+
+    .reveal-team-badge {
+      background: rgba(249, 115, 22, 0.1);
+      color: var(--accent-color);
+      border: 1px solid rgba(249, 115, 22, 0.2);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: inline-block;
+      margin: 0 auto 12px auto;
+    }
+
+    .reveal-career-box {
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding-top: 10px;
+      margin-top: 10px;
+    }
+
+    .career-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 5px;
+      align-items: center;
+    }
+
+    .career-pill {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .career-pill.tpe-team { background: rgba(249, 115, 22, 0.15); border-color: rgba(249, 115, 22, 0.4); color: #ffedd5; }
+    .career-pill.cba-team { background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.4); color: #fee2e2; }
+    .career-pill.overseas-team { background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.4); color: #dbeafe; }
+
+    /* 本輪排行榜 */
+    .round-leaderboard-mobile {
+      margin-top: 15px;
+      text-align: left;
+    }
+
+    .round-leaderboard-mobile h4 {
+      font-size: 0.95rem;
+      color: var(--accent-color);
+      margin-bottom: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      padding-bottom: 5px;
+    }
+
+    .leaderboard-list-mini {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .leaderboard-item-mini {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.04);
+      font-size: 0.85rem;
+    }
+
+    .rank-badge-mini {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: #000;
+      margin-right: 6px;
+    }
+    .rb-1 { background: #eab308; }
+    .rb-2 { background: #cbd5e1; }
+    .rb-3 { background: #b45309; color: #fff; }
+    .rb-other { background: rgba(255,255,255,0.1); color: #fff; }
+
+    /* 頒獎台 */
+    .podium-mini {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 8px;
+      margin: 20px auto;
+      height: 140px;
+    }
+
+    .podium-col-mini {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 80px;
+    }
+
+    .podium-col-mini .name {
+      font-size: 0.75rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 75px;
+      margin-bottom: 4px;
+    }
+
+    .podium-col-mini .step {
+      width: 100%;
+      border-radius: 8px 8px 0 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 1.2rem;
+      color: rgba(255,255,255,0.8);
+    }
+
+    .pc-1 { height: 100%; }
+    .pc-1 .step { height: 75px; background: linear-gradient(180deg, #eab308 0%, #a16207 100%); }
+    .pc-2 { height: 75%; }
+    .pc-2 .step { height: 55px; background: linear-gradient(180deg, #94a3b8 0%, #475569 100%); }
+    .pc-3 { height: 55%; }
+    .pc-3 .step { height: 35px; background: linear-gradient(180deg, #b45309 0%, #78350f 100%); }
+
+    /* 浮動控制面板 (房長專用) */
+    .admin-float-bar {
+      margin-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      padding-top: 15px;
+      display: flex;
+      gap: 10px;
+    }
+
+    /* 答題結果顯示 */
+    .fb-tag {
+      font-size: 1.4rem;
+      font-weight: 900;
+      margin-bottom: 6px;
+    }
+    .fb-correct { color: #10b981; text-shadow: 0 0 10px rgba(16, 185, 129, 0.2); }
+    .fb-incorrect { color: #ef4444; text-shadow: 0 0 10px rgba(239, 68, 68, 0.2); }
+
+    /* 動畫效果 */
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.85); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <div class="player-container">
+    
+    <!-- 1. 入口引導與角色選擇畫面 -->
+    <div id="screen-entry" class="player-card-mobile">
+      <div class="nba-logo" style="font-size: 3rem; margin-bottom: 10px; animation: float 4s infinite;">🏀</div>
+      <h1>NBA 猜頭像搶答遊戲</h1>
+      <p class="subtitle">多人即時連線派對遊戲，請選擇您的角色：</p>
+
+      <div class="entry-buttons">
+        <button id="tab-join" class="entry-tab-btn active">我是玩家（加入）</button>
+        <button id="tab-create" class="entry-tab-btn">我是房長（開房）</button>
+      </div>
+
+      <!-- A. 玩家加入表單 -->
+      <div id="form-join">
+        <div class="input-group">
+          <label for="input-room-code">4 位數房號</label>
+          <input type="number" id="input-room-code" class="input-field" placeholder="請輸入四位數房號" pattern="\d{4}" inputmode="numeric" required>
+        </div>
+        <div class="input-group">
+          <label for="input-nickname-player">玩家暱稱</label>
+          <input type="text" id="input-nickname-player" class="input-field" placeholder="輸入您的遊戲暱稱" maxlength="10" required>
+        </div>
+        <button id="btn-join-room" class="btn btn-primary" style="margin-top: 10px;">
+          加入遊戲房間 ➔
+        </button>
+      </div>
+
+      <!-- B. 房長開房表單 -->
+      <div id="form-create" class="hidden">
+        <div class="input-group">
+          <label for="input-nickname-admin">房長暱稱</label>
+          <input type="text" id="input-nickname-admin" class="input-field" placeholder="輸入您的遊戲暱稱" maxlength="10" value="房長">
+        </div>
+        
+        <div class="input-group">
+          <label>選擇挑戰關卡</label>
+          <div class="mode-cards-mini">
+            <div class="mode-card-mini selected" data-mode="1">
+              <span style="font-size: 1.5rem;">⚡</span>
+              <div>
+                <h4>隨機挑戰 15 人</h4>
+                <p>隨機抽取 15 位全方位經典與綠葉球員。</p>
+              </div>
+            </div>
+            <div class="mode-card-mini" data-mode="2">
+              <span style="font-size: 1.5rem;">🛡️</span>
+              <div>
+                <h4>球隊專屬挑戰</h4>
+                <p>只出現 2010-2016 效力特定隊伍的球員。</p>
+              </div>
+            </div>
+            <div class="mode-card-mini" data-mode="3">
+              <span style="font-size: 1.5rem;">✈️</span>
+              <div>
+                <h4>生涯足跡考驗</h4>
+                <p>隨機挑選 10 位浪人球員，揭曉生涯軌跡。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 球隊選擇 (當選擇關卡二時展開) -->
+        <div id="team-selector-mini" class="input-group hidden">
+          <label>選擇挑戰球隊</label>
+          <div class="team-grid-mini">
+            <button class="team-btn-mini selected" data-team="GSW">勇士</button>
+            <button class="team-btn-mini" data-team="LAL">湖人</button>
+            <button class="team-btn-mini" data-team="MIA">熱火</button>
+            <button class="team-btn-mini" data-team="SAS">馬刺</button>
+            <button class="team-btn-mini" data-team="CLE">騎士</button>
+            <button class="team-btn-mini" data-team="LAC">快艇</button>
+            <button class="team-btn-mini" data-team="CHI">公牛</button>
+            <button class="team-btn-mini" data-team="BOS">塞爾</button>
+          </div>
+        </div>
+
+        <button id="btn-create-room" class="btn btn-primary" style="margin-top: 10px;">
+          建立遊戲房間 🚀
+        </button>
+      </div>
+
+      <div id="entry-error" style="color: #ef4444; margin-top: 15px; font-weight: 700; display: none; font-size: 0.9rem;"></div>
+    </div>
+
+    <!-- 2. 大廳等待連線畫面 (雙角色通用) -->
+    <div id="screen-wait" class="player-card-mobile hidden">
+      <div class="nba-logo" style="font-size: 3.5rem; animation: pulse 1.5s infinite; margin-bottom: 10px;">🏀</div>
+      <h3 style="color: var(--accent-color);">房間準備大廳</h3>
+      <div id="wait-room-code" style="font-size: 1.8rem; font-weight: 900; margin: 5px 0 15px 0; letter-spacing: 3px;">房間：----</div>
+
+      <!-- 房長專用：連線網址與 QR Code -->
+      <div id="admin-connection-area" class="hidden">
+        <div class="qrcode-box-mini">
+          <div id="wait-qrcode"></div>
+        </div>
+        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 15px; word-break: break-all;">
+          好友可掃碼，或輸入網址加入：<br>
+          <strong id="wait-join-url" style="color:var(--accent-color); font-size: 0.85rem;">http://...</strong>
+        </div>
+      </div>
+
+      <div class="joined-players-list">
+        <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 8px; font-weight: 700;">
+          已連線球員 (<span id="wait-player-count">0</span>)
+        </div>
+        <div id="wait-players-pills">
+          <!-- 玩家暱稱泡泡 -->
+        </div>
+      </div>
+
+      <!-- 房長專用按鈕 -->
+      <button id="btn-start-game-admin" class="btn btn-primary hidden" disabled>開始比賽！➔</button>
+      
+      <!-- 普通玩家等待文字 -->
+      <div id="player-wait-text" style="color: var(--text-secondary); font-weight: 700; font-size: 0.95rem;">
+        等待房長開始遊戲... ⏳
+      </div>
+      
+      <button id="btn-leave-lobby" class="btn btn-danger" style="margin-top: 15px; padding: 10px;">
+        🚪 退出房間
+      </button>
+    </div>
+
+    <!-- 3. 遊戲答題中畫面 (雙角色通用) -->
+    <div id="screen-play" class="player-card-mobile hidden">
+      <div class="game-header-mini">
+        <span id="play-progress" style="font-weight: 800; font-size: 0.9rem;">球員：1 / 15</span>
+        <span id="play-nickname" style="font-weight: 800; color: var(--accent-color); font-size: 0.9rem;">---</span>
+        <span id="play-score" style="font-weight: 900; font-size: 0.95rem;">0 pt</span>
+      </div>
+
+      <div class="progress-bar-container">
+        <div id="play-progress-bar" class="progress-bar-fill"></div>
+      </div>
+
+      <!-- 題目呈現卡片 (手機自帶題目畫面！) -->
+      <div style="position: relative;">
+        <div class="image-wrapper-mini">
+          <img id="player-img" class="player-img-mini" src="" alt="NBA Player">
+        </div>
+        <!-- 倒數圓圈 -->
+        <div id="play-timer" class="timer-circle-mini">20</div>
+      </div>
+
+      <div id="play-qtype-badge" class="qtype-tag-mini badge-choice">四選一選擇題</div>
+
+      <!-- A. 選擇題介面 -->
+      <div id="play-mode-choice" class="hidden">
+        <div class="choices-grid-mini">
+          <button class="choice-btn-mini choice-0" data-idx="0">選項 A</button>
+          <button class="choice-btn-mini choice-1" data-idx="1">選項 B</button>
+          <button class="choice-btn-mini choice-2" data-idx="2">選項 C</button>
+          <button class="choice-btn-mini choice-3" data-idx="3">選項 D</button>
+        </div>
+      </div>
+
+      <!-- B. 輸入框介面 -->
+      <div id="play-mode-text" class="hidden">
+        <div class="text-guess-container">
+          <div class="input-group">
+            <label for="input-text-guess" style="text-align:center;">請輸入該球員的姓名（中英文皆可）</label>
+            <input type="text" id="input-text-guess" class="input-field" placeholder="例：Kobe 或 詹姆斯" autocomplete="off">
+          </div>
+          <button id="btn-submit-text-guess" class="btn btn-primary" style="padding: 10px;">送出答案 ➔</button>
+        </div>
+      </div>
+
+      <!-- 答題後的等待覆蓋層 -->
+      <div id="play-submitted-overlay" class="hidden" style="margin-top: 20px;">
+        <div style="font-size: 2rem; animation: pulse 1s infinite;">⏳</div>
+        <p style="font-weight: 700; color: var(--text-secondary); font-size: 0.95rem; margin-top: 8px;">答案已提交！</p>
+        <p style="color: rgba(255,255,255,0.4); font-size: 0.75rem;">已提交人數：<span id="play-answered-ratio">0/0</span></p>
+      </div>
+
+      <!-- 房長專用浮動控制 (在答題中可以手動提前揭曉) -->
+      <div id="admin-play-controls" class="admin-float-bar hidden">
+        <button id="btn-reveal-admin" class="btn btn-primary">提前揭曉答案 👁️</button>
+      </div>
+    </div>
+
+    <!-- 4. 單題答案揭曉與即時排行榜 (雙角色通用) -->
+    <div id="screen-reveal" class="player-card-mobile hidden">
+      <div id="reveal-feedback-icon" style="font-size: 3rem; margin-bottom: 5px;">🎉</div>
+      <div id="reveal-feedback-text" class="fb-tag fb-correct">答對了！</div>
+      <div id="reveal-added-points" style="font-weight: 800; color: #eab308; font-size: 1.1rem; margin-bottom: 12px;">+920 pt</div>
+
+      <div class="reveal-details-box">
+        <div class="reveal-names">
+          <div id="reveal-name-cn" class="reveal-name-cn">---</div>
+          <div id="reveal-name-en" class="reveal-name-en">---</div>
+        </div>
+        
+        <div style="text-align: center;">
+          <div id="reveal-team" class="reveal-team-badge">MIA</div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center;">
+          <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
+            <p style="font-size:0.65rem; color:var(--text-secondary);">PTS</p>
+            <p id="reveal-pts" style="font-weight:800; font-size: 1.05rem;">0.0</p>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
+            <p style="font-size:0.65rem; color:var(--text-secondary);">REB</p>
+            <p id="reveal-reb" style="font-weight:800; font-size: 1.05rem;">0.0</p>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
+            <p style="font-size:0.65rem; color:var(--text-secondary);">AST</p>
+            <p id="reveal-ast" style="font-weight:800; font-size: 1.05rem;">0.0</p>
+          </div>
+        </div>
+
+        <!-- 關卡三生涯足跡 -->
+        <div id="reveal-career" class="reveal-career-box hidden">
+          <p style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 700;">生涯效力軌跡：</p>
+          <div id="reveal-career-path" class="career-pills">
+            <!-- 徽章 -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 本輪即時榜 -->
+      <div class="round-leaderboard-mobile">
+        <h4>即時排行榜 📈</h4>
+        <div id="reveal-leaderboard-list" class="leaderboard-list-mini">
+          <!-- 前五名 -->
+        </div>
+      </div>
+
+      <!-- 房長專用控制 (下一題) -->
+      <div id="admin-reveal-controls" class="admin-float-bar hidden">
+        <button id="btn-next-admin" class="btn btn-primary">下一位球員 ➔</button>
+      </div>
+
+      <!-- 普通玩家等待文字 -->
+      <div id="player-reveal-wait-text" style="color: var(--text-secondary); font-weight: 700; font-size: 0.85rem; margin-top: 15px;">
+        等待房長推進下一題... ⏳
+      </div>
+    </div>
+
+    <!-- 5. 遊戲結束/最終總排行榜畫面 (雙角色通用) -->
+    <div id="screen-end" class="player-card-mobile hidden">
+      <div class="nba-logo" style="font-size: 3.5rem; margin-bottom: 10px;">🏆</div>
+      <h2>總冠軍誕生！</h2>
+      
+      <!-- 頒獎台 -->
+      <div id="end-podium" class="podium-mini">
+        <!-- 頒獎台前三名 -->
+      </div>
+
+      <!-- 完整排行榜 -->
+      <div style="text-align: left; margin-bottom: 20px;">
+        <h4 style="color: var(--accent-color); font-size: 0.95rem; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 5px;">完整名次表 📊</h4>
+        <div id="end-leaderboard-list" class="leaderboard-list-mini">
+          <!-- 完整排行 -->
+        </div>
+      </div>
+
+      <!-- 房長專用控制：再玩一次 -->
+      <button id="btn-restart-admin" class="btn btn-primary hidden">重新開房遊玩 🔄</button>
+      
+      <!-- 普通玩家按鈕：回大廳 -->
+      <button id="btn-restart-player" class="btn btn-secondary">回首頁 🏠</button>
+    </div>
+
+  </div>
+
+  <!-- Socket.io 客戶端套件 (會由 Node 伺服器動態提供) -->
+  <script src="/socket.io/socket.io.js"></script>
+  <!-- QR Code 產生套件 (使用 CDN) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- 載入手機/房長合一邏輯 -->
+  <script src="player.js"></script>
+</body>
+</html>
