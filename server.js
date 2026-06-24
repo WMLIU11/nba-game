@@ -1,5 +1,6 @@
 const express = require('express');
 const http = require('http');
+const https = require('https');
 const { Server } = require('socket.io');
 const path = require('path');
 const fs = require('fs');
@@ -39,6 +40,34 @@ app.get('/', (req, res) => {
 
 // 託管靜態檔案
 app.use(express.static(__dirname));
+
+// 圖片代理路由：繞過 CORS，由伺服器幫忙抓取 NBA 球員頭像
+app.get('/api/nba-image/:id', (req, res) => {
+  const playerId = req.params.id;
+  const cdnUrl = `https://cdn.nba.com/headshots/nba/latest/260x190/${playerId}.png`;
+  
+  const options = {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      'Referer': 'https://www.nba.com/',
+      'Accept': 'image/webp,image/png,image/*,*/*;q=0.8'
+    }
+  };
+  
+  https.get(cdnUrl, options, (imgRes) => {
+    if (imgRes.statusCode === 200) {
+      res.setHeader('Content-Type', imgRes.headers['content-type'] || 'image/png');
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      imgRes.pipe(res);
+    } else {
+      // 若 cdn.nba.com 找不到，回傳 404 讓前端顯示預設頭像
+      res.status(404).send('Image not found');
+    }
+  }).on('error', (err) => {
+    console.error(`NBA image proxy error for player ${playerId}:`, err.message);
+    res.status(500).send('Image proxy error');
+  });
+});
 
 // 路由設定：手機玩家與房長合併頁面
 app.get('/play', (req, res) => {
@@ -174,8 +203,9 @@ function sendNextQuestion(roomCode) {
 
   console.log(`房間 ${roomCode} 發送題目 [${room.currentIndex + 1}/${room.totalRounds}]: ${player.en_name} (主題: ${room.category})`);
 
+  // 使用伺服器端代理路由，避免前端瀏覽器直接請求 NBA CDN 被 CORS/Referer 阻擋
   const imageUrl = room.category === 'nba' 
-    ? `https://cdn.nba.com/headshots/nba/latest/260x190/${player.id}.png`
+    ? `/api/nba-image/${player.id}`
     : player.image_url;
 
   // 廣播給房間內所有玩家

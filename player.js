@@ -7,6 +7,7 @@ let nickname = "";
 let isAdmin = false;
 let gameMode = 1;
 let selectedTeam = "GSW";
+let currentCategory = "nba"; // 預設為 NBA
 let myScore = 0;
 let gameplayTimer = null;
 let currentDuration = 20;
@@ -33,7 +34,9 @@ const entryError = document.getElementById("entry-error");
 // DOM 元素 - 房長關卡選項
 const modeCards = document.querySelectorAll(".mode-card-mini");
 const teamSelectorMini = document.getElementById("team-selector-mini");
-const teamBtns = document.querySelectorAll(".team-btn-mini");
+const teamBtns = document.querySelectorAll("#team-selector-mini .team-btn-mini");
+const themeBtns = document.querySelectorAll("#theme-btns-container .team-btn-mini");
+const nbaModeGroup = document.getElementById("nba-mode-group");
 
 // DOM 元素 - 大廳等待
 const waitRoomCode = document.getElementById("wait-room-code");
@@ -145,6 +148,40 @@ teamBtns.forEach(btn => {
     selectedTeam = btn.dataset.team;
   });
 });
+
+themeBtns.forEach(btn => {
+  btn.addEventListener("click", () => {
+    themeBtns.forEach(b => b.classList.remove("selected"));
+    btn.classList.add("selected");
+    currentCategory = btn.dataset.theme;
+    
+    if (currentCategory === "nba") {
+      nbaModeGroup.classList.remove("hidden");
+      if (gameMode === 2) {
+        teamSelectorMini.classList.remove("hidden");
+      }
+    } else {
+      nbaModeGroup.classList.add("hidden");
+      teamSelectorMini.classList.add("hidden");
+    }
+  });
+});
+
+// 頭像載入出錯處理
+playerImg.onerror = () => {
+  const currentSrc = playerImg.src;
+  // 若是代理路由失敗，直接顯示預設頭像（不再重試）
+  if (currentSrc.includes("/api/nba-image/")) {
+    playerImg.src = "https://upload.wikimedia.org/wikipedia/commons/7/7b/Basketball_silhouette.svg";
+    playerImg.onerror = null; // 防止無限迴圈
+  } else if (currentCategory === "nba") {
+    playerImg.src = "https://upload.wikimedia.org/wikipedia/commons/7/7b/Basketball_silhouette.svg";
+    playerImg.onerror = null;
+  } else {
+    playerImg.src = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
+    playerImg.onerror = null;
+  }
+};
 
 // === 錯誤訊息顯示 ===
 function showEntryError(msg) {
@@ -262,7 +299,7 @@ socket.on("update_players", (data) => {
 
 // === 房長開始遊戲 ===
 btnStartGameAdmin.addEventListener("click", () => {
-  socket.emit("start_game", { gameMode, selectedTeam });
+  socket.emit("start_game", { gameMode, selectedTeam, category: currentCategory });
 });
 
 socket.on("game_started", () => {
@@ -338,11 +375,16 @@ function disableAnswering() {
 
 // === 答題中狀態處理 ===
 socket.on("new_question", (data) => {
-  const { currentIndex, totalRounds, type, choices, duration, playerId, pts, reb, ast, team, gameMode: roomMode } = data;
+  const { currentIndex, totalRounds, type, choices, duration, playerId, imageUrl, pts, reb, ast, team, labels, category, gameMode: roomMode } = data;
   currentDuration = duration;
   
+  // 更新本題主題類別暫存
+  if (category) currentCategory = category;
+
+  const isCelebrity = (currentCategory && currentCategory !== "nba");
+
   // 1. 基本進度 UI 重置
-  playProgress.textContent = `球員：${currentIndex + 1} / ${totalRounds}`;
+  playProgress.textContent = `${isCelebrity ? '人物' : '球員'}：${currentIndex + 1} / ${totalRounds}`;
   playSubmittedOverlay.classList.add("hidden");
   playAnsweredRatio.textContent = `0/${waitPlayerCount.textContent}`;
   
@@ -353,8 +395,8 @@ socket.on("new_question", (data) => {
     adminPlayControls.classList.add("hidden");
   }
   
-  // 3. 設定頭像圖片
-  playerImg.src = `https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/2015/260x190/${playerId}.png`;
+  // 3. 設定頭像圖片 (直接使用伺服器回傳之 imageUrl)
+  playerImg.src = imageUrl || `https://cdn.nba.com/headshots/nba/latest/260x190/${playerId}.png`;
   
   // 4. 設定答題類型 UI
   if (type === "choice") {
@@ -374,6 +416,12 @@ socket.on("new_question", (data) => {
     playQtypeBadge.className = "qtype-tag-mini badge-text";
     playModeChoice.classList.add("hidden");
     playModeText.classList.remove("hidden");
+    
+    // 修改輸入提示文字
+    const labelText = document.querySelector("#play-mode-text label");
+    if (labelText) {
+      labelText.textContent = isCelebrity ? "請輸入該人物的姓名（中英文皆可）" : "請輸入該球員的姓名（中英文皆可）";
+    }
     
     inputTextGuess.value = "";
     inputTextGuess.disabled = false;
@@ -437,8 +485,10 @@ btnRevealAdmin.addEventListener("click", () => {
 socket.on("answer_revealed", (data) => {
   stopQuestionTimer();
   
-  const { correctNameCn, correctNameEn, playerData, leaderboard, playerResults } = data;
+  const { correctNameCn, correctNameEn, playerData, labels, leaderboard, playerResults } = data;
   const myResult = playerResults[socket.id];
+  
+  const isCelebrity = (currentCategory && currentCategory !== "nba");
   
   // 1. 頭像除霧模糊消除
   playerImg.style.filter = "blur(0px)";
@@ -463,29 +513,48 @@ socket.on("answer_revealed", (data) => {
     }
   }
   
+  // 更新動態數據標籤
+  if (labels) {
+    document.getElementById("label-stat1").textContent = labels.stat1;
+    document.getElementById("label-stat2").textContent = labels.stat2;
+    document.getElementById("label-stat3").textContent = labels.stat3;
+  }
+  
   // 3. 填入球員答案與數據詳情
   revealNameCn.textContent = correctNameCn;
   revealNameEn.textContent = correctNameEn;
-  revealTeam.textContent = `主要球隊：${playerData.team}`;
+  revealTeam.textContent = isCelebrity ? `代表作品：${playerData.team}` : `主要球隊：${playerData.team}`;
   revealPts.textContent = playerData.pts.toFixed(1);
   revealReb.textContent = playerData.reb.toFixed(1);
   revealAst.textContent = playerData.ast.toFixed(1);
   
-  // 關卡三生涯效力軌跡顯示
-  if (gameMode === 3) {
+  // 關卡三生涯效力軌跡 或 藝人標籤榮譽顯示
+  if (isCelebrity || gameMode === 3) {
     revealCareer.classList.remove("hidden");
+    
+    const careerTitle = document.querySelector("#reveal-career p");
+    if (careerTitle) {
+      careerTitle.textContent = isCelebrity ? "人物標籤/榮譽：" : "生涯效力軌跡：";
+    }
+    
     revealCareerPath.innerHTML = "";
     
     playerData.career_teams.forEach((t, i) => {
       const badge = document.createElement("span");
       badge.className = "career-pill";
-      if (t.startsWith("TPE-")) badge.classList.add("tpe-team");
-      else if (t.startsWith("CBA-")) badge.classList.add("cba-team");
-      else if (t.includes("-")) badge.classList.add("overseas-team");
+      
+      if (isCelebrity) {
+        badge.classList.add("tpe-team"); // 藝人金黃色標籤
+      } else {
+        if (t.startsWith("TPE-")) badge.classList.add("tpe-team");
+        else if (t.startsWith("CBA-")) badge.classList.add("cba-team");
+        else if (t.includes("-")) badge.classList.add("overseas-team");
+      }
       badge.textContent = t;
       revealCareerPath.appendChild(badge);
       
-      if (i < playerData.career_teams.length - 1) {
+      // 僅 NBA 畫箭頭
+      if (!isCelebrity && i < playerData.career_teams.length - 1) {
         const arrow = document.createElement("span");
         arrow.style.color = "var(--text-secondary)";
         arrow.textContent = "➔";
