@@ -322,9 +322,9 @@ function startQuestionTimer(duration) {
   const totalSteps = (duration * 1000) / step;
   let currentStep = 0;
   
-  // 開始前設置頭像高度模糊
-  playerImg.style.filter = "blur(15px)";
-  playerImg.style.transform = "scale(1.2)";
+  // 頭像直接清晰顯示（無模糊效果）
+  playerImg.style.filter = "none";
+  playerImg.style.transform = "scale(1)";
 
   gameplayTimer = setInterval(() => {
     currentStep++;
@@ -333,15 +333,10 @@ function startQuestionTimer(duration) {
     const percent = 100 - (currentStep / totalSteps) * 100;
     playProgressBar.style.width = `${Math.max(0, percent)}%`;
     
-    // 每 1000ms 更新文字計時器與模糊除霧
+    // 每 1000ms 更新文字計時器
     if (currentStep % 10 === 0) {
       timeLeft--;
       playTimer.textContent = Math.max(0, timeLeft);
-      
-      // 除霧：隨時間倒數，模糊度從 15px 降到 2px
-      const progressRatio = timeLeft / duration;
-      const currentBlur = Math.max(2, 15 * progressRatio);
-      playerImg.style.filter = `blur(${currentBlur}px)`;
       
       if (timeLeft <= 5) {
         playTimer.classList.add("low-time");
@@ -490,8 +485,8 @@ socket.on("answer_revealed", (data) => {
   
   const isCelebrity = (currentCategory && currentCategory !== "nba");
   
-  // 1. 頭像除霧模糊消除
-  playerImg.style.filter = "blur(0px)";
+  // 1. 確保頭像清晰顯示
+  playerImg.style.filter = "none";
   playerImg.style.transform = "scale(1)";
   
   // 2. 顯示個人答題反饋
