@@ -594,6 +594,36 @@
       gap: 10px;
     }
 
+    /* 中斷/返回大廳列（所有遊戲畫面通用） */
+    .interrupt-bar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 8px;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.12);
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-ghost:hover {
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+      border-color: rgba(255,255,255,0.25);
+    }
+
     /* 答題結果顯示 */
     .fb-tag {
       font-size: 1.4rem;
@@ -832,6 +862,10 @@
 
     <!-- 3. 遊戲答題中畫面 (雙角色通用) -->
     <div id="screen-play" class="player-card-mobile hidden">
+      <!-- 返回/中斷按鈕 -->
+      <div class="interrupt-bar">
+        <button class="btn-ghost" id="btn-quit-play">← 離開遊戲</button>
+      </div>
       <div class="game-header-mini">
         <span id="play-progress" style="font-weight: 800; font-size: 0.9rem;">球員：1 / 15</span>
         <span id="play-nickname" style="font-weight: 800; color: var(--accent-color); font-size: 0.9rem;">---</span>
@@ -889,6 +923,10 @@
 
     <!-- 4. 【新增】關卡結束暫時排名畫面 -->
     <div id="screen-round-end" class="player-card-mobile hidden">
+      <!-- 返回/中斷按鈕 -->
+      <div class="interrupt-bar">
+        <button class="btn-ghost" id="btn-quit-round-end">← 離開遊戲</button>
+      </div>
       <div class="round-end-banner">
         <div class="round-end-title" id="round-end-title">🎉 第一關卡結束！</div>
         <div class="round-end-subtitle" id="round-end-subtitle">已完成 1 / 3 關卡</div>
@@ -913,6 +951,10 @@
 
     <!-- 5. 單題答案揭曉與即時排行榜 (雙角色通用) -->
     <div id="screen-reveal" class="player-card-mobile hidden">
+      <!-- 返回/中斷按鈕 -->
+      <div class="interrupt-bar">
+        <button class="btn-ghost" id="btn-quit-reveal">← 離開遊戲</button>
+      </div>
       <div id="reveal-feedback-icon" style="font-size: 3rem; margin-bottom: 5px;">🎉</div>
       <div id="reveal-feedback-text" class="fb-tag fb-correct">答對了！</div>
       <div id="reveal-added-points" style="font-weight: 800; color: #eab308; font-size: 1.1rem; margin-bottom: 12px;">+920 pt</div>

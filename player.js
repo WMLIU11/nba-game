@@ -757,3 +757,30 @@ socket.on("room_closed", (data) => {
   alert(data.message);
   window.location.reload();
 });
+
+// === 中斷/離開遊戲功能 ===
+function quitGame() {
+  if (isAdmin) {
+    const confirmed = confirm("⚠️ 您是房長！\n離開遊戲將會關閉整個房間，所有玩家都會被踢出。\n\n確定要結束遊戲嗎？");
+    if (confirmed) {
+      stopQuestionTimer();
+      socket.emit("terminate_game");
+      window.location.reload();
+    }
+  } else {
+    const confirmed = confirm("確定要離開遊戲嗎？\n\n（您的分數將不會被保存，但其他玩家仍可繼續遊玩）");
+    if (confirmed) {
+      stopQuestionTimer();
+      window.location.reload();
+    }
+  }
+}
+
+// 綁定三個離開按鈕（答題中、揭曉後、關卡結束畫面）
+const btnQuitPlay = document.getElementById("btn-quit-play");
+const btnQuitReveal = document.getElementById("btn-quit-reveal");
+const btnQuitRoundEnd = document.getElementById("btn-quit-round-end");
+
+if (btnQuitPlay) btnQuitPlay.addEventListener("click", quitGame);
+if (btnQuitReveal) btnQuitReveal.addEventListener("click", quitGame);
+if (btnQuitRoundEnd) btnQuitRoundEnd.addEventListener("click", quitGame);
