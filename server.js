@@ -69,6 +69,47 @@ app.get('/api/nba-image/:id', (req, res) => {
   });
 });
 
+// 藝人圖片代理路由：繞過 Wikipedia Hotlink 防護
+// 用法：/api/celeb-image?id=<encodeURIComponent(wikipedia_url)>
+app.get('/api/celeb-image', (req, res) => {
+  const rawUrl = req.query.id;
+  if (!rawUrl) return res.status(400).send('Missing id param');
+
+  let targetUrl;
+  try {
+    targetUrl = decodeURIComponent(rawUrl);
+    // 安全性：只允許 wikimedia.org 網域
+    const parsed = new URL(targetUrl);
+    if (!parsed.hostname.endsWith('wikimedia.org') && !parsed.hostname.endsWith('wikipedia.org')) {
+      return res.status(403).send('Forbidden host');
+    }
+  } catch (e) {
+    return res.status(400).send('Invalid URL');
+  }
+
+  const options = {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Referer': 'https://en.wikipedia.org/',
+      'Accept': 'image/webp,image/png,image/*,*/*;q=0.8'
+    }
+  };
+
+  https.get(targetUrl, options, (imgRes) => {
+    if (imgRes.statusCode === 200 || imgRes.statusCode === 206) {
+      res.setHeader('Content-Type', imgRes.headers['content-type'] || 'image/jpeg');
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      imgRes.pipe(res);
+    } else {
+      console.error(`Celebrity image proxy got status ${imgRes.statusCode} for: ${targetUrl}`);
+      res.status(imgRes.statusCode).send('Image not found');
+    }
+  }).on('error', (err) => {
+    console.error(`Celebrity image proxy error:`, err.message);
+    res.status(500).send('Image proxy error');
+  });
+});
+
 // 路由設定：手機玩家與房長合併頁面
 app.get('/play', (req, res) => {
   res.sendFile(path.join(__dirname, 'player.html'));
@@ -284,10 +325,14 @@ function sendNextQuestion(roomCode) {
 
   console.log(`房間 ${roomCode} 發送題目 [${room.currentIndex + 1}/${room.totalRounds}]: ${player.en_name} (主題: ${room.category})`);
 
-  // 使用伺服器端代理路由，避免前端瀏覽器直接請求 NBA CDN 被 CORS/Referer 阻擋
-  const imageUrl = room.category === 'nba' 
-    ? `/api/nba-image/${player.id}`
-    : player.image_url;
+  // 使用伺服器端代理路由，避免前端瀏覽器直接請求被 CORS/Referer 阻擋
+  let imageUrl;
+  if (room.category === 'nba') {
+    imageUrl = `/api/nba-image/${player.id}`;
+  } else {
+    // 藝人圖片經由伺服器代理，繞過 Wikipedia Hotlink 防護
+    imageUrl = `/api/celeb-image?id=${encodeURIComponent(player.image_url)}`;
+  }
 
   // 廣播給房間內所有玩家
   io.to(`room-${roomCode}`).emit('new_question', {
