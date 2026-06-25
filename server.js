@@ -330,8 +330,12 @@ function sendNextQuestion(roomCode) {
   if (room.category === 'nba') {
     imageUrl = `/api/nba-image/${player.id}`;
   } else {
-    // 藝人圖片經由伺服器代理，繞過 Wikipedia Hotlink 防護
-    imageUrl = `/api/celeb-image?id=${encodeURIComponent(player.image_url)}`;
+    // 如果藝人圖片是本地路徑（例如以 /public 開頭），直接提供；否則經由代理路由
+    if (player.image_url && player.image_url.startsWith('/public')) {
+      imageUrl = player.image_url;
+    } else {
+      imageUrl = `/api/celeb-image?id=${encodeURIComponent(player.image_url)}`;
+    }
   }
 
   // 廣播給房間內所有玩家
