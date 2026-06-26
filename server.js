@@ -18,6 +18,7 @@ const PORT = process.env.PORT || 3000;
 // 載入資料庫
 let PLAYERS = [];
 let CELEBRITIES = [];
+let CARTOONS = [];
 
 try {
   PLAYERS = JSON.parse(fs.readFileSync(path.join(__dirname, 'nba_players.json'), 'utf-8'));
@@ -31,6 +32,13 @@ try {
   console.log(`成功載入藝人資料庫，共 ${CELEBRITIES.length} 位藝人。`);
 } catch (error) {
   console.error("無法讀取 celebrities.json 檔案！", error);
+}
+
+try {
+  CARTOONS = JSON.parse(fs.readFileSync(path.join(__dirname, 'cartoon_characters.json'), 'utf-8'));
+  console.log(`成功載入卡通角色資料庫，共 ${CARTOONS.length} 個角色。`);
+} catch (error) {
+  console.error("無法讀取 cartoon_characters.json 檔案！", error);
 }
 
 // 根網址重導向至手機/房長合一頁面
@@ -69,7 +77,7 @@ app.get('/api/nba-image/:id', (req, res) => {
   });
 });
 
-// 藝人圖片代理路由：繞過 Wikipedia Hotlink 防護
+// 藝人/卡通圖片代理路由：繞過 Wikipedia/Wikimedia Hotlink 防護
 // 用法：/api/celeb-image?id=<encodeURIComponent(wikipedia_url)>
 app.get('/api/celeb-image', (req, res) => {
   const rawUrl = req.query.id;
@@ -78,7 +86,7 @@ app.get('/api/celeb-image', (req, res) => {
   let targetUrl;
   try {
     targetUrl = decodeURIComponent(rawUrl);
-    // 安全性：只允許 wikimedia.org 網域
+    // 安全性：只允許 wikimedia.org 與 wikipedia.org 網域
     const parsed = new URL(targetUrl);
     if (!parsed.hostname.endsWith('wikimedia.org') && !parsed.hostname.endsWith('wikipedia.org')) {
       return res.status(403).send('Forbidden host');
@@ -100,6 +108,20 @@ app.get('/api/celeb-image', (req, res) => {
       res.setHeader('Content-Type', imgRes.headers['content-type'] || 'image/jpeg');
       res.setHeader('Cache-Control', 'public, max-age=86400');
       imgRes.pipe(res);
+    } else if (imgRes.statusCode === 302 || imgRes.statusCode === 301) {
+      // 跟隨重定向
+      const redirectUrl = imgRes.headers.location;
+      https.get(redirectUrl, options, (redirectRes) => {
+        if (redirectRes.statusCode === 200) {
+          res.setHeader('Content-Type', redirectRes.headers['content-type'] || 'image/jpeg');
+          res.setHeader('Cache-Control', 'public, max-age=86400');
+          redirectRes.pipe(res);
+        } else {
+          res.status(redirectRes.statusCode).send('Image not found after redirect');
+        }
+      }).on('error', (err) => {
+        res.status(500).send('Redirect error');
+      });
     } else {
       console.error(`Celebrity image proxy got status ${imgRes.statusCode} for: ${targetUrl}`);
       res.status(imgRes.statusCode).send('Image not found');
@@ -170,6 +192,13 @@ function getStatLabels(category) {
       stat3: "主要獎項數"
     };
   }
+  if (category === 'cartoon') {
+    return {
+      stat1: "帥氣指數",
+      stat2: "首播年份",
+      stat3: "魅力指數"
+    };
+  }
   return {
     stat1: "PTS (得分)",
     stat2: "REB (籃板)",
@@ -182,6 +211,7 @@ function getCategoryName(category) {
   if (category === 'nba') return 'NBA 球員';
   if (category === 'male_celebrity') return '台灣男藝人';
   if (category === 'female_celebrity') return '台灣女藝人';
+  if (category === 'cartoon') return '卡通/電玩人物';
   return category;
 }
 
@@ -203,6 +233,10 @@ function getPlayersForCategory(category, gameMode, selectedTeam) {
   }
   if (category === 'female_celebrity') {
     return CELEBRITIES.filter(c => c.type === 'female').sort(() => 0.5 - Math.random()).slice(0, 10);
+  }
+  if (category === 'cartoon') {
+    // 從 30 個角色中隨機選取 10 個
+    return [...CARTOONS].sort(() => 0.5 - Math.random()).slice(0, 10);
   }
   return [];
 }
@@ -286,6 +320,8 @@ function sendNextQuestion(roomCode) {
     databaseForChoices = CELEBRITIES.filter(c => c.type === 'male');
   } else if (room.category === 'female_celebrity') {
     databaseForChoices = CELEBRITIES.filter(c => c.type === 'female');
+  } else if (room.category === 'cartoon') {
+    databaseForChoices = CARTOONS;
   }
 
   // 產生四選一選項
@@ -329,8 +365,17 @@ function sendNextQuestion(roomCode) {
   let imageUrl;
   if (room.category === 'nba') {
     imageUrl = `/api/nba-image/${player.id}`;
+  } else if (room.category === 'cartoon') {
+    // 卡通人物圖片：若為 Wikipedia/Wikimedia，透過代理；否則直接使用
+    if (player.image_url && (player.image_url.includes('wikimedia.org') || player.image_url.includes('wikipedia.org'))) {
+      imageUrl = `/api/celeb-image?id=${encodeURIComponent(player.image_url)}`;
+    } else if (player.image_url && player.image_url.startsWith('/public')) {
+      imageUrl = player.image_url;
+    } else {
+      imageUrl = `/api/celeb-image?id=${encodeURIComponent(player.image_url)}`;
+    }
   } else {
-    // 如果藝人圖片是本地路徑（例如以 /public 開頭），直接提供；否則經由代理路由
+    // 藝人圖片
     if (player.image_url && player.image_url.startsWith('/public')) {
       imageUrl = player.image_url;
     } else {
